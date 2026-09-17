@@ -1,0 +1,36 @@
+services:
+  api:
+    build:
+      context: ./backend
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: 4000
+      MONGODB_URI: mongodb://mongo:27017/navin_kawal
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      NAVIN_EMAIL: ${NAVIN_EMAIL:-navin@example.com}
+      SMTP_HOST: ${SMTP_HOST:-smtp.example.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-your-smtp-username}
+      SMTP_PASS: ${SMTP_PASS:-your-smtp-password}
+      SMTP_FROM: ${SMTP_FROM:-Navin Kawal Bookings <bookings@example.com>}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:8
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok' localhost:27017/test | grep 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
